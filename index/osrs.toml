@@ -2,4 +2,4 @@ name = "Old School Runescape"
 home = "https://discord.com/channels/731205301247803413/1113198991845376170"
 
 [versions]
-"1.2.0-rc" = { url = "https://github.com/digiholic/Archipelago/releases/download/rc-1.2/osrs.apworld" }
+"1.5.0-rc" = { url = "https://github.com/digiholic/Archipelago/releases/download/rc-1.5/osrs.apworld" }
