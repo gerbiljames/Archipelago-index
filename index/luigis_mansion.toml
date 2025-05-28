@@ -3,4 +3,4 @@ home = "https://discord.com/channels/731205301247803413/1062582715796426883"
 default_url = "https://github.com/BootsinSoots/Archipelago/releases/download/V{{version}}/luigismansion.apworld"
 
 [versions]
-"0.2.4" = {}
+"0.4.4" = {}
