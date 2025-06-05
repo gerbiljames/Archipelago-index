@@ -1,0 +1,7 @@
+name = "Soul Blazer"
+home = "https://discord.com/channels/731205301247803413/1209689725057761310"
+default_url = "https://github.com/Tranquilite0/Archipelago-SoulBlazer/releases/download/v{{version}}/soulblazer.apworld"
+
+[versions]
+"0.4.1" = {}
+"0.4.2" = {}
