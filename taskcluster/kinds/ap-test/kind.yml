@@ -59,7 +59,7 @@ tasks:
         make-expectations-patch-make-patch:
           artifact: public/expectations.patch
           extract: false
-          dest: /builds/worker/checkout/vcs
+          dest: /builds/worker/checkouts/vcs
     fetches:
       by-tasks-for:
         github-push: {}
