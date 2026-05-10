@@ -1,7 +1,3 @@
-> [!IMPORTANT]
-> This project has been archived. I have no intention on continuing working on
-> this. You can read more [here](https://gist.github.com/Eijebong/4a8a4a4f96bb64f1503113c81c410653)
-
 # How to add/update worlds
 
 - Add an `{apworld}.toml` file in the `index/` directory. The name of the file **MUST** match the apworld name. So for `A link to the Past` which apworld is `alttp`, you would create a file named `alttp.toml`.
@@ -40,17 +36,17 @@ When the author uses tags that are semver compatible, it's possible to add a `de
 This makes it easier to update and can be used to automatically fetch newer versions so it's the prefered way of doing things.
 
 
-# Criterias for inclusion
+# Criteria for inclusion
 
 > [!IMPORTANT]
-> Do **NOT** go make demands for apworlds author to cater their apworlds for inclusion in this index.
+> Do **NOT** make demands of apworld authors to cater their apworlds for inclusion in this index.
 
-- The apworld must not be banned on the archipelago server for copyright reasons
+- The apworld must not be banned on the Archipelago Discord server for copyright reasons.
 - The apworld must not contain big unknown executable binary blobs or depend on any.
-- The apworld must not contain obvious flaws that will make life difficult for anyone trying to generate large multiworlds. That includes direct usage of the random module, obvious logic flaws, test failures that are deemed problematic...
-- The apworld must not make any use of a remote resource during generation.
-- The apworld must not require a ROM to generate. Apworlds already present in the index are exempt from this, but I will not accept any new one.
-- The generation failure rate calculated using my [fuzzer](https://github.com/Eijebong/Archipelago-fuzzer) must be below 1% (not counting `OptionError`s).
-  - To help removing failures that would be considered restrictive starts, those rates will be calculated with a second [world](https://github.com/Eijebong/empty-apworld) present that has 100 free locations
+- The apworld must not contain obvious flaws that will make life difficult for anyone trying to generate large multiworlds. That includes direct usage of the random module, obvious logic flaws, forced interactivity during generation, or test failures that are deemed problematic.
+- The apworld must not make any use of remote resources during generation. That includes checking the internet for the latest release or similar checks.
+- The apworld must not require a ROM to generate. Apworlds already present in the index are exempt from this, but I will not accept any new ones.
+- The generation failure rate calculated using Eijebong's [fuzzer](https://github.com/ionium-ap/Archipelago-fuzzer) must be below 1% (not counting `OptionError`s).
+  - To help removing failures that would be considered restrictive starts, those rates will be calculated with a second [world](https://github.com/ionium-ap/empty-apworld) present that has 100 free locations
   - I will make exceptions for failures happening early during generation (before `generate_basic`) as those would most likely be detectd by YAML validation and won't result in a big time loss during generation
 - If the apworld is a beta for core verified game then it must have a different game name (`LADX` -> `LADX beta`)
