@@ -41,7 +41,7 @@ This makes it easier to update and can be used to automatically fetch newer vers
 > [!IMPORTANT]
 > Do **NOT** make demands of apworld authors to cater their apworlds for inclusion in this index.
 
-- We will only accept apworlds that have a stable public URL: For example, a GitHub release artifact, or othersie a direct link to the `.apworld` file. We will no longer accept apworlds directly into this repo (i.e. local sources).
+- We will only accept apworlds that have a stable public URL: For example, a GitHub release artifact, or otherwise a direct link to the `.apworld` file. We will no longer accept apworlds directly into this repo (i.e. local sources).
 - The apworld must not be banned on the Archipelago Discord server for copyright reasons.
 - The apworld must not contain big unknown executable binary blobs or depend on any.
 - The apworld must not contain obvious flaws that will make life difficult for anyone trying to generate large multiworlds. That includes direct usage of the random module, obvious logic flaws, forced interactivity during generation, or test failures that are deemed problematic.
