@@ -1,6 +1,6 @@
 name: CI command trigger
 
-# Pattern B: PR-comment-driven dispatch to a GitLab pipeline.
+# PR-comment-driven dispatch to a GitLab pipeline.
 #
 # Why issue_comment + this YAML at all?
 #   The actual validation/fuzz pipeline runs on self-hosted GitLab runners
@@ -12,18 +12,25 @@ name: CI command trigger
 #   /ci run on a malicious PR", which is the same threat model as the
 #   manual GitLab UI trigger.
 #
-# Required secret in this repo:
+# Required secrets in this repo:
 #   GITLAB_TRIGGER_TOKEN  — pipeline trigger token from the mirror project's
 #                           CI/CD settings on git.mooinglemur.com.
+#   BOT_PAT               — fine-grained PAT scoped to ionium-ap/Archipelago-index
+#                           with: Pull requests: Read  (head-SHA lookup)
+#                                 Issues:        Read+Write (post reactions)
+#                           Used in place of GITHUB_TOKEN because the org-level
+#                           Actions policy caps GITHUB_TOKEN's perms below
+#                           issues:write regardless of the workflow's
+#                           `permissions:` declaration.
 
 on:
   issue_comment:
     types: [created]
 
 permissions:
-  pull-requests: read   # so we can look up the PR head SHA
+  # All GitHub API calls go through BOT_PAT, so GITHUB_TOKEN only needs the
+  # default read-only access.
   contents: read
-  issues: write         # so we can post reactions on the triggering comment
 
 env:
   # URL-encoded project path so we don't have to track the numeric ID.
@@ -39,6 +46,7 @@ jobs:
         name: Parse /ci command and authorize
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.BOT_PAT }}
           script: |
             const body = (context.payload.comment.body || '');
             // Match /ci run or /ci fuzz at the start of any line. We match
@@ -113,6 +121,7 @@ jobs:
         env:
           COMMENT_ID: ${{ steps.parse.outputs.comment_id }}
         with:
+          github-token: ${{ secrets.BOT_PAT }}
           script: |
             // 🚀 = "pipeline kicked off"
             await github.rest.reactions.createForIssueComment({
@@ -128,6 +137,7 @@ jobs:
         env:
           COMMENT_ID: ${{ steps.parse.outputs.comment_id }}
         with:
+          github-token: ${{ secrets.BOT_PAT }}
           script: |
             // 😕 = "tried to trigger but it didn't work; check Actions log"
             await github.rest.reactions.createForIssueComment({
