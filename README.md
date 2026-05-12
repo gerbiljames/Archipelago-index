@@ -19,15 +19,12 @@ It's not always feasible though because of discord UX choices regarding search. 
 ## Src
 
 The index supports two different source types, `url` and `local`.
-When possible, one should prefer `url` to avoid bloating the repo with apworlds.
+Since we're no longer accepting local sources, always use `url`.
 
 Examples:
 
 - The apworld is released on github and has a direct download link to the apworld in the release:
   `"0.1.0" = { url = "https://github.com/foo/bar/releases/download/0.1.0/foo.apworld" }`
-
-- The apworld is only distributed on some discord channel or the release on github doesn't distribute the apworld. You would need to copy the apworld to the `apworlds` folder of the repository as `{apworld}-{version}.apworld`
-  `"0.1.0" = { local = "../apworlds/foo-0.1.0.apworld" }`
 
 ### Special case for `url` releases
 
