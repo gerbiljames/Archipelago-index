@@ -28,7 +28,6 @@ echo "downloading every indexed apworld into $DOWNLOAD_DIR ..."
 apwm download -i . -d "$DOWNLOAD_DIR"
 
 PAIRS_TSV=$(mktemp)
-trap 'rm -f "$PAIRS_TSV"' EXIT
 
 python3 - <<'PY' > "$PAIRS_TSV"
 import tomllib, sys
@@ -46,6 +45,9 @@ OK=0
 SKIP=0
 FAIL=0
 
+RESPONSE_FILE=$(mktemp)
+trap 'rm -f "$PAIRS_TSV" "$RESPONSE_FILE"' EXIT
+
 while IFS=$'\t' read -r world version; do
     file="$DOWNLOAD_DIR/${world}-${version}.apworld"
     if [ ! -f "$file" ]; then
@@ -55,15 +57,17 @@ while IFS=$'\t' read -r world version; do
     fi
     w_enc=$(printf '%s' "$world"   | jq -sRr @uri)
     v_enc=$(printf '%s' "$version" | jq -sRr @uri)
-    if curl -fsS -X POST \
+    HTTP_CODE=$(curl -sS -X POST \
          -H "X-Api-Key: $APDIFF_API_KEY" \
          -H "Content-Type: application/octet-stream" \
          --data-binary @"$file" \
-         "$APDIFF_BASE_URL/api/import?world=${w_enc}&version=${v_enc}" \
-         >/dev/null; then
+         -o "$RESPONSE_FILE" \
+         -w '%{http_code}' \
+         "$APDIFF_BASE_URL/api/import?world=${w_enc}&version=${v_enc}")
+    if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
         OK=$((OK+1))
     else
-        echo "FAIL: $world $version" >&2
+        echo "FAIL ($HTTP_CODE): $world $version: $(cat "$RESPONSE_FILE")" >&2
         FAIL=$((FAIL+1))
     fi
 done < "$PAIRS_TSV"
