@@ -1,0 +1,75 @@
+name: Post-merge GitLab publish trigger
+
+# Fires the GitLab `MODE=publish` pipeline after each main-branch push has
+# been mirrored to GitLab. That pipeline runs `apwm update` against the
+# freshly-merged main, commits the refreshed index.lock back here (with
+# `[skip ci]`), then fires the lobby's /worlds/refresh endpoint.
+#
+# Chained off `Mirror to GitLab` via `workflow_run` so we never trigger the
+# publish job before its required commit has landed on the GitLab mirror
+# (without the chain, the publish job sometimes fetched stale main).
+#
+# Skips when the head commit was authored by the bot itself (by `[skip ci]`
+# marker), so the lockfile-update commit doesn't trigger a follow-on
+# publish run.
+#
+# Required secret in this repo:
+#   GITLAB_TRIGGER_TOKEN  — same token used by trigger.yml; pipeline trigger
+#                           token from the mirror project's CI/CD settings.
+
+on:
+  workflow_run:
+    workflows: ["Mirror to GitLab"]
+    types: [completed]
+    branches: [main]
+  # Manual fallback for re-firing the publish flow (e.g. if the chain fired
+  # before a downstream service was ready and you want to retry).
+  workflow_dispatch:
+
+# Default GITHUB_TOKEN read-only is plenty -- this workflow only POSTs to
+# GitLab and doesn't touch the GitHub API.
+permissions:
+  contents: read
+
+# Serialize publish triggers so two rapid main-pushes don't kick off two
+# overlapping publish runs racing on the same index.lock. cancel-in-progress
+# is false because the in-flight one is still doing useful work (lockfile
+# regen + lobby refresh) that we don't want to interrupt mid-stream.
+concurrency:
+  group: post-merge-publish
+  cancel-in-progress: false
+
+env:
+  GITLAB_PIPELINE_TRIGGER_URL: https://git.mooinglemur.com/api/v4/projects/ionium-ap%2Farchipelago-index/trigger/pipeline
+
+jobs:
+  trigger-publish:
+    runs-on: ubuntu-latest
+    # Two gates, OR'd over the two trigger types:
+    #   - workflow_dispatch: manual retry; no upstream check, no [skip ci] check.
+    #   - workflow_run: only proceed if the mirror succeeded AND the commit
+    #     it mirrored isn't our own bot commit. Otherwise we'd loop:
+    #       merge → mirror → publish → bot commit → mirror → ...
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.head_commit.message, '[skip ci]')) }}
+    steps:
+      - name: Trigger GitLab pipeline (MODE=publish)
+        env:
+          TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
+          # workflow_run sets github.sha to the upstream's HEAD already,
+          # but use head_sha explicitly so behavior is identical when this
+          # is fired manually via workflow_dispatch (where github.sha is
+          # whatever HEAD of main happens to be at dispatch time).
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -e
+          response=$(curl -fsS -X POST \
+            -F "token=$TOKEN" \
+            -F "ref=main" \
+            -F "variables[MODE]=publish" \
+            -F "variables[GITHUB_SHA]=$SHA" \
+            "$GITLAB_PIPELINE_TRIGGER_URL")
+          echo "$response" | jq .
+          web_url=$(echo "$response" | jq -r '.web_url // empty')
+          if [ -n "$web_url" ]; then
+            echo "Pipeline: $web_url"
+          fi
