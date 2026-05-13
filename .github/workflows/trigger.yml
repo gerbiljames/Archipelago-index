@@ -16,8 +16,9 @@ name: CI command trigger
 #   GITLAB_TRIGGER_TOKEN  — pipeline trigger token from the mirror project's
 #                           CI/CD settings on git.mooinglemur.com.
 #   BOT_PAT               — fine-grained PAT scoped to ionium-ap/Archipelago-index
-#                           with: Pull requests: Read  (head-SHA lookup)
-#                                 Issues:        Read+Write (post reactions)
+#                           with: Pull requests:    Read       (head-SHA lookup)
+#                                 Issues:           Read+Write (post reactions)
+#                                 Commit statuses:  Read+Write (pre-post pending statuses)
 #                           Used in place of GITHUB_TOKEN because the org-level
 #                           Actions policy caps GITHUB_TOKEN's perms below
 #                           issues:write regardless of the workflow's
@@ -111,9 +112,59 @@ jobs:
             "$GITLAB_PIPELINE_TRIGGER_URL")
           echo "$response" | jq .
           web_url=$(echo "$response" | jq -r '.web_url // empty')
-          if [ -n "$web_url" ]; then
-            echo "PIPELINE_URL=$web_url" >> "$GITHUB_ENV"
+          # Fail the step if GitLab didn't return a pipeline URL (e.g., 200
+          # with an unexpected error body). That way `success()` further
+          # down the workflow really means "we have a live pipeline to
+          # post pending statuses for".
+          if [ -z "$web_url" ]; then
+            echo "::error::GitLab trigger response had no web_url; treating as failure"
+            exit 1
           fi
+          echo "PIPELINE_URL=$web_url" >> "$GITHUB_ENV"
+
+      - name: Pre-post pending statuses
+        if: steps.parse.outputs.skip == 'false' && success()
+        uses: actions/github-script@v7
+        env:
+          SHA: ${{ steps.parse.outputs.sha }}
+          MODE: ${{ steps.parse.outputs.mode }}
+          # PIPELINE_URL inherited from the prior step via $GITHUB_ENV.
+        with:
+          github-token: ${{ secrets.BOT_PAT }}
+          script: |
+            // Pre-stage `state=pending` commit statuses so the PR's checks
+            // section shows "in progress" rows the moment we trigger the
+            // GitLab pipeline. Each GitLab job's `report_to_github`
+            // after_script overwrites its row with success/failure when
+            // it completes. Keep this list in sync with the jobs in
+            // index-validate.yml that have `<<: *report_to_github` and a
+            // `$MODE == "run" || $MODE == "fuzz"` rule (or `"fuzz"` alone
+            // for fuzz-only jobs).
+            const mode = process.env.MODE;
+            const sha = process.env.SHA;
+            const pipelineUrl = process.env.PIPELINE_URL;
+            const base = [
+              'diff', 'check', 'verify-index', 'verify-apworlds',
+              'apdiff', 'comment-diff', 'network-audit',
+            ];
+            const fuzzOnly = mode === 'fuzz' ? ['fuzz'] : [];
+            const contexts = [...base, ...fuzzOnly].map(c => `gitlab/${c}`);
+
+            for (const ctx of contexts) {
+              try {
+                await github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha,
+                  state: 'pending',
+                  context: ctx,
+                  description: 'queued on GitLab',
+                  target_url: pipelineUrl,
+                });
+              } catch (e) {
+                core.warning(`failed to pre-post pending status for ${ctx}: ${e.message}`);
+              }
+            }
 
       - name: React with rocket
         if: steps.parse.outputs.skip == 'false' && success()
