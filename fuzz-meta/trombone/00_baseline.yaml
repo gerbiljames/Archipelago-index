@@ -1,1 +1,80 @@
-Trombone Champ: {}
+Trombone Champ:
+  fuzz_constraints:
+  # make sure max_diff is higher than min_diff
+  - option: min_diff
+    if_value: 9
+    then:
+      max_diff: 10
+  - option: min_diff
+    if_value: 8
+    then:
+      max_diff: random-range-9-10
+  - option: min_diff
+    if_value: 7
+    then:
+      max_diff: random-range-8-10
+  - option: min_diff
+    if_value: 6
+    then:
+      max_diff: random-range-7-10
+  - option: min_diff
+    if_value: 5
+    then:
+      max_diff: random-range-6-10
+  - option: min_diff
+    if_value: 4
+    then:
+      max_diff: random-range-5-10
+  - option: min_diff
+    if_value: 3
+    then:
+      max_diff: random-range-4-10
+  - option: min_diff
+    if_value: 2
+    then:
+      max_diff: random-range-3-10
+  # make sure initial rating is not below goal rating
+  - option: rating
+    if_value: 3
+    then:
+      initial_rating: 3
+  - option: rating
+    if_value: 2
+    then:
+      initial_rating: random-range-2-3
+  - option: rating
+    if_value: 1
+    then:
+      initial_rating: random-range-1-3
+  # ensure all 10 difficulties have at least one track from the base game that is not stream-unsafe not excluded
+  # NOTE: no elegant way to just prevent values being used, instead looks for one specific value and excludes another per difficulty
+  - option: removed_tracks
+    if_selected: "Warm-Up"
+    must_exclude: ["Zarathustra"]
+  - option: removed_tracks
+    if_selected: "God Save The King"
+    must_exclude: ["Ode to Joy"]
+  - option: removed_tracks
+    if_selected: "Arirang"
+    must_exclude: ["Danny Boy"]
+  - option: removed_tracks
+    if_selected: "Mars"
+    must_exclude: ["O Christmas Tree"]
+  - option: removed_tracks
+    if_selected: "Blue Danube"
+    must_exclude: ["Eine Kleine"]
+  - option: removed_tracks
+    if_selected: "Baboons!"
+    must_exclude: ["Chop Waltz"]
+  - option: removed_tracks
+    if_selected: "Are U Ready"
+    must_exclude: ["Auld Lang Syne"]
+  - option: removed_tracks
+    if_selected: "Danse Macabre"
+    must_exclude: ["Gladiators"]
+  - option: removed_tracks
+    if_selected: "Bumblebee"
+    must_exclude: ["Commander Tokyo"]
+  - option: removed_tracks
+    if_selected: "Sailor's Hornpipe"
+    must_exclude: ["Eine (CHAMP MIX)"]
