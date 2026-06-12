@@ -770,6 +770,9 @@
 "1.0.0" = "bafde7b5a786f20fca45041ae9b9616e853eb746dd9f12c2a1b710b2627eb1e3"
 "2.0.0" = "6cad0ee1a06b6a72bb310828a2929765449fe75f268c223c62b40cd0207f82a8"
 
+[manual_pokemongo_fusionwarriorspra]
+"0.0.1" = "307ee89bd373b5e39cbdc85a5bff018c0e71ec885b288fb3a49ecef28b990c39"
+
 [manual_pokemonplatinum_linneus]
 "2.1.0" = "3e005fae863119b4e4074d864d926e0ca9c297d90f01f3c125a7f8ef5356a1ed"
 "2.2.1" = "a0b6947cace88c27d6adbda6389c8f53ca2336bc3e7ea24b1a10f7f7b77c2d7b"
